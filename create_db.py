@@ -32,8 +32,9 @@ def create_table(conn, create_table_sql):
 
 
 def main():
-    database = r"/home/vt/sqlite3_db/local_omdb.db"
-
+    database = r"/home/vt/sqlite3_db/local_omdb.db"  # Here we define the DB_file location
+    
+    # Defining columns name for the films table
     sql_create_films_table = """CREATE TABLE IF NOT EXISTS films (
                                     id integer PRIMARY KEY,
                                     title text NOT NULL,
