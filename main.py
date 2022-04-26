@@ -18,12 +18,11 @@ last_page_response = {'Response': 'False', 'Error': 'Movie not found!'}
 err_input_response = {'Response': 'False', 'Error': 'Too many results.'}
 pages = np.arange(1, 1000, 1)
 
-'''
-https://github.com/omdbapi/OMDb-API/issues/251
-Although not documented, it appears that the search works only for > 3 characters reliably.
-'''
 
 def movie_name_precheck():
+    """ This function is called to check if the movie name and response is correct. 
+    :return: checkedname - correct name
+    """
     checkedname = ''
     name = False
     while not name:
@@ -37,31 +36,30 @@ def movie_name_precheck():
         else:
             checkedname = movie_name
             name = True
-        if not resp_input_check.ok:
+        if not resp_input_check.ok:  # if response not 200
             print(resp_input_check.text)
             exit(1)
     return checkedname
 
 def parse_movie(checkedname):
-    """ create a database connection to the SQLite database
-        specified by db_file
+    """ This function will parse OMDB API with mentioned correct movie name
     :param checkedname: from input
-    :return: The List of prepared rows (Title, Year, IMDB_ID). Array = Python List type
+    :return: the list of prepared rows (Title, Year, IMDB_ID). Array = Python List type
     """
     movty = []
     for c, page in enumerate(pages):
-        page = f"{web_host}{api_token}&plot=short&type=movie&s={checkedname}&page=" + str(page)
+        page = f"{web_host}{api_token}&plot=short&type=movie&s={checkedname}&page=" + str(page)  # looping each page with needed keyword
         response = requests.get(page, headers=header)
         # sleep(uniform(0.05,0.1))  # Delay, if there are restrictions for amount of calls.
         if last_page_response == response.json():
             print(f"There are {c + 1} pages for your search in the OMDB")
             break
-        for item in json.loads(response.text)['Search']:
+        for item in json.loads(response.text)['Search']:  # looping thought items on each page
             movies_Title.append(item['Title'])
             movies_Date.append(item['Year'])
             imdbID.append(item['imdbID'])
-            movty = list(zip(movies_Title, movies_Date, imdbID))
-    movty.sort()
+            movty = list(zip(movies_Title, movies_Date, imdbID))  # Appending all items in one list
+    movty.sort()  # Sorting by movie title
     return movty
 
 
@@ -116,13 +114,13 @@ def main():
     print("")
     print("This script will search movies in OMDB (Open Movie Data Base)")
     checkedname = movie_name_precheck()
-    tic = time.perf_counter()
-    movty = parse_movie(checkedname)
+    tic = time.perf_counter()  # Used to count script performance
+    movty = parse_movie(checkedname)  # Feeding a parsing function with the correct and existing name
 
     conn = create_connection(database)  # Create a database connection
     with conn:
         try:
-            insert_movie(conn, movty)
+            insert_movie(conn, movty)  # Inserting movies from the parsed and sorted list into the SQLite DB
             print('-' * 16, 'Films found:', '-' * 16)
             i = 0
             for i, index in enumerate(movty):
